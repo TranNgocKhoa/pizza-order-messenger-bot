@@ -1,0 +1,26 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.khoa.bot.connector.facebook.repository.mapper.AddressMapper">
+    <insert id="insertAddress" parameterType="address" useGeneratedKeys="true" keyProperty="id">
+        INSERT IGNORE INTO chat_bot.address(user_id, address_value)
+            VALUE (#{userId}, #{addressValue})
+    </insert>
+
+    <update id="updatePhoneNumber" parameterType="address">
+        UPDATE chat_bot.address
+        SET phone_number = #{phoneNumber}
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectAddressByOrderId" resultType="address">
+        SELECT
+            a.id, a.user_id, a.address_value, a.phone_number
+        FROM chat_bot.address AS a
+                 LEFT JOIN chat_bot.order_address_mapping AS oam ON a.id = oam.address_id
+        WHERE
+            oam.order_id = #{orderId}
+    </select>
+
+
+</mapper>

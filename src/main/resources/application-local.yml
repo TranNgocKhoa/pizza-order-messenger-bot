@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    hikari:
+      pool-name: HikariCP
+      minimum-idle: 4
+      maximum-pool-size: 16
+      connection-timeout: 10000
+      idle-timeout: 300000
+      max-lifetime: 600000
+#      driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3307/chat_bot?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
+    username: root
+    password: root

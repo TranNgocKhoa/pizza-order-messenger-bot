@@ -1,0 +1,130 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.khoa.bot.connector.facebook.repository.mapper.OrderMapper">
+    <insert id="insertOrder" useGeneratedKeys="true" keyProperty="id" parameterType="order">
+        INSERT
+        IGNORE INTO chat_bot.orders(user_id)
+            VALUE (
+        #{userId}
+        )
+    </insert>
+
+    <insert id="addOrderItem" parameterType="orderItem">
+        INSERT
+        IGNORE INTO chat_bot.order_item(order_id, product_id, price, quantity)
+            VALUE (
+        #{orderId},
+        #{productId},
+        #{price},
+        1
+        )
+    </insert>
+
+    <select id="selectLatestInProgressOrder" resultType="order" parameterType="user">
+        SELECT o.id,
+               o.user_id,
+               o.status,
+               o.datetime,
+               uoc.catalogue_data AS catalogueData
+        FROM chat_bot.orders AS o
+                 LEFT JOIN
+             chat_bot.user_order_context AS uoc ON uoc.user_id = #{user.id}
+        WHERE o.user_id = #{user.id}
+          AND o.status NOT IN ('COMPLETED', 'CANCELED')
+        ORDER BY o.id DESC LIMIT
+            1
+    </select>
+
+    <select id="selectInProgressOrders" resultType="order" parameterType="user">
+        SELECT o.id,
+               o.user_id,
+               o.status,
+               o.datetime,
+               uoc.catalogue_data AS catalogueData
+        FROM chat_bot.orders AS o
+                 LEFT JOIN
+             chat_bot.user_order_context AS uoc ON uoc.user_id = #{user.id}
+        WHERE o.user_id = #{user.id}
+        ORDER BY o.id DESC LIMIT 5
+    </select>
+
+
+    <select id="selectOrderItems" resultMap="orderItemMap">
+        SELECT oi.order_id,
+               oi.product_id,
+               oi.price,
+               oi.quantity,
+               oiom.option_id AS optionId
+        FROM chat_bot.order_item AS oi
+                 LEFT JOIN chat_bot.orders AS o ON oi.order_id = o.id
+                 LEFT JOIN chat_bot.order_item_option_mapping AS oiom
+                           ON o.id = oiom.order_id AND oi.product_id = oiom.product_id
+        WHERE oi.order_id = #{orderId}
+    </select>
+
+    <select id="selectCatalogueData" resultType="catalogueData">
+        SELECT catalogue_data
+        FROM chat_bot.user_order_context AS uoc
+        WHERE uoc.user_id = #{userId}
+    </select>
+
+    <resultMap id="orderItemMap" type="orderItem">
+        <result column="order_id" property="orderId"/>
+        <result column="product_id" property="productId"/>
+        <result column="price" property="price"/>
+        <result column="quantity" property="quantity"/>
+        <collection property="orderItemOptionList" ofType="orderItemOption" resultMap="orderItemOptionMap"/>
+    </resultMap>
+
+    <resultMap id="orderItemOptionMap" type="orderItemOption">
+        <result property="orderId" column="order_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="optionId" column="optionId"/>
+    </resultMap>
+
+    <select id="selectOrderAddressMapping" resultType="address">
+        SELECT a.id,
+               a.user_id,
+               a.address_value,
+               a.phone_number
+        FROM chat_bot.address AS a
+                 LEFT JOIN chat_bot.order_address_mapping AS oam ON a.id = oam.address_id
+        WHERE oam.order_id = #{orderId}
+    </select>
+
+    <update id="updateCatalogueData">
+        <bind name="catalogueDataString" value="catalogueData.toString()"/>
+        INSERT INTO
+        chat_bot.user_order_context(user_id, facebook_id, order_context, catalogue_data)
+        VALUE(#{user.id}, #{user.facebookId}, #{user.userOrderContextType}, #{catalogueDataString})
+        ON DUPLICATE
+        KEY UPDATE catalogue_data = VALUES(catalogue_data)
+    </update>
+
+    <update id="addOrderItemOptionMapping">
+        INSERT
+        IGNORE INTO chat_bot.order_item_option_mapping(order_id, product_id, option_id, extra_fee)
+        VALUE (
+        #{orderId},
+        #{productId},
+        #{optionId},
+        #{extraFee}
+        )
+    </update>
+
+    <insert id="addOrderAddressMapping">
+        INSERT
+        IGNORE INTO chat_bot.order_address_mapping(order_id, address_id)
+        VALUE (
+        #{orderId},
+        #{addressId}
+        )
+    </insert>
+
+    <update id="completeOrder">
+        UPDATE chat_bot.orders
+        SET status = 'COMPLETED'
+        WHERE id = #{orderId}
+    </update>
+</mapper>

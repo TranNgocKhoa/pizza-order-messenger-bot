@@ -1,0 +1,53 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.khoa.bot.connector.facebook.repository.mapper.ProductMapper">
+    <select id="selectProductList" resultType="product">
+        SELECT p.id        AS id,
+               p.name      AS name,
+               p.price     AS price,
+               p.image_url AS imageUrl
+        FROM chat_bot.product AS p
+            LIMIT #{offset}
+           , #{limit}
+    </select>
+
+    <select id="selectProduct" resultType="product">
+        SELECT p.id        AS id,
+               p.name      AS name,
+               p.image_url AS imageUrl
+        FROM chat_bot.product AS p
+        WHERE p.id = #{productId}
+    </select>
+
+    <select id="selectProductOptionList" resultType="productOption">
+        SELECT pom.product_id,
+               o.name,
+               pom.option_id,
+               pom.extra_fee,
+               o.type
+        FROM chat_bot.product_option_mapping AS pom
+                 LEFT JOIN chat_bot.`option` AS o ON pom.option_id = o.id
+        WHERE pom.product_id = #{productId}
+          AND o.type = #{optionType}
+    </select>
+
+    <select id="selectProductOption" resultType="productOption">
+        SELECT pom.product_id,
+               o.name,
+               pom.option_id,
+               pom.extra_fee,
+               o.type
+        FROM chat_bot.product_option_mapping AS pom
+                 LEFT JOIN chat_bot.`option` AS o ON pom.option_id = o.id
+        WHERE pom.product_id = #{productId}
+          AND pom.option_id = #{optionId}
+    </select>
+
+    <select id="selectOption" resultType="option">
+        SELECT
+            o.id, o.type, o.name
+        FROM chat_bot.`option` AS o
+        WHERE o.id = #{optionId}
+    </select>
+</mapper>

@@ -1,0 +1,28 @@
+version: 0.0.1
+
+messenger:
+  host: https://graph.facebook.com/v11.0/me/messages?access_token={appAccessToken}
+  version: v7.0
+  appAccessToken: ${messenger.appAccessToken}
+  appSecret: ${messenger.appSecret}
+
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+  type-aliases-package: com.khoa.bot.connector.facebook.entity
+  type-handlers-package: com.khoa.bot.connector.facebook.repository.handler
+
+
+logging:
+  charset:
+    console: UTF-8
+  level:
+    root: INFO
+    org.springframework.web.client.RestTemplate: INFO
+    com.google.cloud.sql.mysql.SocketFactory: INFO
+    com.zaxxer.hikari.HikariDataSource: INFO
+    com.khoa.bot.connector.facebook.repository.mapper: INFO
+spring:
+  profiles:
+    active: cloud

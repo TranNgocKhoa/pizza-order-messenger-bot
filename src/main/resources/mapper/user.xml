@@ -1,0 +1,42 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.khoa.bot.connector.facebook.repository.mapper.UserMapper">
+    <select id="selectUser" resultType="user">
+        SELECT u.id                     AS id,
+               u.facebook_id            AS facebookId,
+               u.user_ref               AS userRef,
+               ucc.conversation_context AS conversationContext,
+               uoc.order_context        AS userOrderContextType
+        FROM chat_bot.user AS u
+                 LEFT JOIN
+             chat_bot.user_conversation_context ucc on u.id = ucc.user_id
+                 LEFT JOIN
+             chat_bot.user_order_context uoc on u.id = uoc.user_id
+        WHERE u.facebook_id = #{facebookId}
+    </select>
+
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="id" parameterType="user">
+        INSERT IGNORE INTO
+            chat_bot.user(facebook_id, user_ref)
+        VALUE
+            (#{facebookId}, #{userRef})
+    </insert>
+
+    <insert id="insertUserConversationContext" parameterType="user">
+        INSERT INTO
+            chat_bot.user_conversation_context(user_id, facebook_id, conversation_context)
+        VALUE
+            (#{id}, #{facebookId}, #{conversationContext})
+        ON DUPLICATE KEY UPDATE conversation_context = VALUES(conversation_context)
+    </insert>
+
+    <insert id="insertOrderContext" parameterType="user">
+        <bind name="catalogueDataString" value="catalogueData.toString()"/>
+        INSERT INTO
+            chat_bot.user_order_context(user_id, facebook_id, order_context, catalogue_data)
+        VALUE
+            (#{id}, #{facebookId}, #{userOrderContextType}, #{catalogueDataString})
+        ON DUPLICATE KEY UPDATE order_context = VALUES(order_context)
+    </insert>
+</mapper>
